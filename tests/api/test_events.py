@@ -1,10 +1,12 @@
-import pytest
-from httpx import AsyncClient
 from datetime import datetime
 from uuid import uuid4
 
+import pytest
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.market_event import Event
+
 
 @pytest.mark.asyncio
 async def test_get_events_empty(client: AsyncClient):
@@ -13,6 +15,7 @@ async def test_get_events_empty(client: AsyncClient):
     data = response.json()
     assert data["data"] == []
     assert data["total"] == 0
+
 
 @pytest.mark.asyncio
 async def test_create_and_get_event(db_session: AsyncSession, client: AsyncClient):
@@ -26,7 +29,7 @@ async def test_create_and_get_event(db_session: AsyncSession, client: AsyncClien
         title="Q1 Earnings",
         details={"eps": 1.5},
         source="provider_a",
-        provider_event_id="test_id_1"
+        provider_event_id="test_id_1",
     )
     db_session.add(db_event)
     await db_session.commit()
@@ -38,6 +41,7 @@ async def test_create_and_get_event(db_session: AsyncSession, client: AsyncClien
     assert data["total"] == 1
     assert data["data"][0]["symbol"] == "AAPL"
     assert data["data"][0]["id"] == str(event_id)
+
 
 @pytest.mark.asyncio
 async def test_get_event_by_id(db_session: AsyncSession, client: AsyncClient):
@@ -51,7 +55,7 @@ async def test_get_event_by_id(db_session: AsyncSession, client: AsyncClient):
         title="MSFT Dividend",
         details={},
         source="provider_a",
-        provider_event_id="test_msft_1"
+        provider_event_id="test_msft_1",
     )
     db_session.add(db_event)
     await db_session.commit()
@@ -61,10 +65,12 @@ async def test_get_event_by_id(db_session: AsyncSession, client: AsyncClient):
     assert response.status_code == 200
     assert response.json()["symbol"] == "MSFT"
 
+
 @pytest.mark.asyncio
 async def test_get_event_not_found(client: AsyncClient):
     response = await client.get(f"/api/v1/events/{uuid4()}")
     assert response.status_code == 404
+
 
 @pytest.mark.asyncio
 async def test_sync_events_endpoint(client: AsyncClient, mocker):
@@ -72,10 +78,7 @@ async def test_sync_events_endpoint(client: AsyncClient, mocker):
     mocker.patch("app.services.provider_service.sync_provider_a", return_value=(1, 0))
     mocker.patch("app.services.provider_service.sync_provider_b", return_value=(0, 1))
 
-    payload = {
-        "symbols": ["AAPL", "GOOGL"],
-        "force": True
-    }
+    payload = {"symbols": ["AAPL", "GOOGL"], "force": True}
     response = await client.post("/api/v1/events/sync", json=payload)
     assert response.status_code == 200
     data = response.json()

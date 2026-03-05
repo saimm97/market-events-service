@@ -1,14 +1,16 @@
-from typing import List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
-from app.models.market_event import EventSyncLog
-from app.crud import market_event as crud
-from app.schemas import market_event as schemas
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
+from app.crud import market_event as crud
+from app.models.market_event import EventSyncLog
+from app.schemas import market_event as schemas
 from providers.provider_a import ProviderA
 from providers.provider_b import ProviderB
+
 
 def format_event_title(symbol: str, event_type: str, event_datetime: datetime):
     """
@@ -16,10 +18,11 @@ def format_event_title(symbol: str, event_type: str, event_datetime: datetime):
     If time is missing, use 00:00:00
     """
     if not event_datetime:
-        event_datetime = datetime.now(timezone.utc)
+        event_datetime = datetime.now(UTC)
     return f"{symbol.upper()} {event_type.upper()} {event_datetime.strftime('%Y-%m-%d %H:%M:%S')}"
 
-async def sync_provider_a(db: AsyncSession, symbols: List[str]):
+
+async def sync_provider_a(db: AsyncSession, symbols: list[str]):
     """
     Fetches events from Provider A, normalizes them, and stores them in the database.
     """
@@ -36,14 +39,14 @@ async def sync_provider_a(db: AsyncSession, symbols: List[str]):
                 updated_count += 1
     return created_count, updated_count
 
-def normalize_provider_a_event(event: Dict[str, Any]) -> Dict[str, Any]:
+
+def normalize_provider_a_event(event: dict[str, Any]) -> dict[str, Any]:
     """
     Normalizes an event from Provider A to the unified data model.
     """
-    date_str = event.get('date')
-    time_str = event.get('time')
+    date_str = event.get("date")
+    time_str = event.get("time")
 
-    # Default time if missing or invalid
     if not time_str or str(time_str).lower() == "none":
         time_str = "00:00:00"
 
@@ -52,10 +55,9 @@ def normalize_provider_a_event(event: Dict[str, Any]) -> Dict[str, Any]:
     try:
         event_date = datetime.fromisoformat(event_datetime_str)
     except ValueError:
-        # fallback if even after default it's invalid
-        event_date = datetime.now(timezone.utc)
+        event_date = datetime.now(UTC)
 
-    normalized_title = format_event_title(event['ticker'], event['type'], event_date)
+    normalized_title = format_event_title(event["ticker"], event["type"], event_date)
     return {
         "symbol": event["ticker"],
         "event_type": event["type"],
@@ -66,7 +68,8 @@ def normalize_provider_a_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "provider_event_id": event["event_id"],
     }
 
-async def sync_provider_b(db: AsyncSession, symbols: List[str]):
+
+async def sync_provider_b(db: AsyncSession, symbols: list[str]):
     """
     Fetches events from Provider B, normalizes them, and stores them in the database.
     """
@@ -82,12 +85,9 @@ async def sync_provider_b(db: AsyncSession, symbols: List[str]):
                 created_count += 1
             else:
                 updated_count += 1
-        
+
         while result["pagination"]["has_next"]:
-            result = await provider.fetch_events(
-                symbols,
-                cursor=result["pagination"]["next_cursor"]
-            )
+            result = await provider.fetch_events(symbols, cursor=result["pagination"]["next_cursor"])
             events = result["events"]
             for event in events:
                 normalized_event = normalize_provider_b_event(event)
@@ -99,7 +99,7 @@ async def sync_provider_b(db: AsyncSession, symbols: List[str]):
     return created_count, updated_count
 
 
-def normalize_provider_b_event(event: Dict[str, Any]) -> Dict[str, Any]:
+def normalize_provider_b_event(event: dict[str, Any]) -> dict[str, Any]:
     """
     Normalizes an event from Provider B to the unified data model.
     """
@@ -110,10 +110,9 @@ def normalize_provider_b_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "economic_indicator": "economic",
     }
 
-
-    evt_date = datetime.fromisoformat(event['event']['scheduled_at'].replace('Z', '+00:00'))
-    evt_type = event_type_mapping.get(event['event']['category'], "unknown")
-    normalized_title = format_event_title(event['instrument']['symbol'], evt_type, evt_date)
+    evt_date = datetime.fromisoformat(event["event"]["scheduled_at"].replace("Z", "+00:00"))
+    evt_type = event_type_mapping.get(event["event"]["category"], "unknown")
+    normalized_title = format_event_title(event["instrument"]["symbol"], evt_type, evt_date)
 
     return {
         "symbol": event["instrument"]["symbol"],
@@ -126,7 +125,6 @@ def normalize_provider_b_event(event: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-
 async def get_symbols_to_sync(db: AsyncSession, symbols: list[str], force: bool):
     symbols_to_sync = []
     symbols_skipped = []
@@ -134,11 +132,9 @@ async def get_symbols_to_sync(db: AsyncSession, symbols: list[str], force: bool)
     if force:
         symbols_to_sync = symbols
     else:
-        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1) 
+        one_hour_ago = datetime.now(UTC) - timedelta(hours=1)
         for symbol in symbols:
-            result = await db.execute(
-                select(EventSyncLog).filter(EventSyncLog.symbol == symbol)
-            )
+            result = await db.execute(select(EventSyncLog).filter(EventSyncLog.symbol == symbol))
             log = result.scalars().first()
             if log and log.last_synced_at > one_hour_ago:
                 symbols_skipped.append(symbol)
@@ -147,12 +143,11 @@ async def get_symbols_to_sync(db: AsyncSession, symbols: list[str], force: bool)
 
     return symbols_to_sync, symbols_skipped
 
+
 async def update_sync_log(db: AsyncSession, symbols: list[str]):
-    now = datetime.now(timezone.utc) 
+    now = datetime.now(UTC)
     for symbol in symbols:
-        result = await db.execute(
-            select(EventSyncLog).filter(EventSyncLog.symbol == symbol)
-        )
+        result = await db.execute(select(EventSyncLog).filter(EventSyncLog.symbol == symbol))
         log = result.scalars().first()
         if log:
             log.last_synced_at = now

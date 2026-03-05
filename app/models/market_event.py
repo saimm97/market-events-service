@@ -1,16 +1,18 @@
 import uuid
+
 from sqlalchemy import (
-    Column,
-    String,
-    DateTime,
     JSON,
-    func,
+    Column,
+    DateTime,
+    String,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
+
 
 class Event(Base):
     __tablename__ = "events"
@@ -26,9 +28,8 @@ class Event(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    __table_args__ = (
-        UniqueConstraint('symbol', 'event_type', 'event_date', name='_symbol_event_type_date_uc'),
-    )
+    __table_args__ = (UniqueConstraint("symbol", "event_type", "event_date", name="_symbol_event_type_date_uc"),)
+
 
 class EventSyncLog(Base):
     __tablename__ = "event_sync_log"

@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Market Events Service"
@@ -9,13 +9,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
 
-    PROVIDER_A_API_KEY: Optional[str] = None
-    PROVIDER_B_API_KEY: Optional[str] = None
+    PROVIDER_A_API_KEY: str | None = None
+    PROVIDER_B_API_KEY: str | None = None
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        case_sensitive=True,
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
+
 
 settings = Settings()
