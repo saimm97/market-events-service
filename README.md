@@ -1,145 +1,192 @@
-# Market Events Service
+Market Events Service
+=====================
 
-A high-performance, asynchronous FastAPI service designed to aggregate, normalize, and visualize financial market events from multiple providers. Built with a modular, layered architecture for maximum maintainability and scalability.
+Overview
+--------
 
----
+The **Market Events Service** is a **FastAPI** application that aggregates financial market events from multiple providers, normalizes them into a unified schema, stores them in PostgreSQL with deduplication, caches results in Redis, and exposes a REST API and a dashboard for visualization.
 
-## 🏗 Architecture & Design Patterns
+The service supports **earnings, dividends, splits, and economic events**, and allows clients to query events efficiently with filtering, pagination, and caching.
 
-The project follows **Clean Architecture** principles, separating concerns into distinct layers:
+Table of Contents
+-----------------
 
-- **API Layer (`app/api/`)**: Handle HTTP requests, routing, and dependency injection.
-- **Service Layer (`app/services/`)**: Core business logic, including provider synchronization and normalization.
-- **Data Access Layer (`app/crud/`)**: Encapsulated database operations (Repository pattern).
-- **Domain Layer (`app/models/` & `app/schemas/`)**: Data structure definitions and Pydantic validation.
-- **Core Infrastructure (`app/core/`)**: Shared configuration, database engines, and cache clients.
+1. Features
+2. Assumptions
+3. Architecture
+4. Data Models
+5. API Endpoints
+6. Dashboard
+7. Providers
+8. Setup & Installation
+9. Testing
+10. Future Improvements
 
-### System Overview (Mermaid)
+Features
+--------
 
-```mermaid
-graph TD
-    User([User/Client]) -->|HTTP| Dashboard[Dashboard UI]
-    User -->|HTTP| API[FastAPI API Layer]
-    Dashboard -->|Internal Call| Services[Service Layer]
-    API -->|DI| Services
-    Services -->|Normalized Data| CRUD[CRUD/DAL Layer]
-    Services -->|Async HTTP| Providers[External Providers A/B]
-    CRUD -->|SQLAlchemy Async| DB[(PostgreSQL)]
-    API -->|Cache Check| Redis[(Redis)]
+*   Fetches events from two simulated providers (ProviderA and ProviderB).
+*   Normalizes events into a **unified schema**.
+*   Stores events in **PostgreSQL**, avoiding duplicates using unique constraints.
+*   Tracks last sync per symbol using `EventSyncLog`.
+*   Caches API responses in **Redis** with TTL and supports cache headers (`X-Cache: HIT / MISS`).
+*   Provides a REST API and a **dashboard** with filters, metrics, and event listing.
+*   Supports forced sync and incremental sync per symbol.
+*   Utilizes a professional **layered architecture** (API, Service, CRUD, Models, Schemas).
+
+Assumptions
+-----------
+
+1. **Provider simulation**:
+   *   `providers/` folder simulates external APIs.
+   *   Each provider has different formats and may return overlapping events with different IDs.
+2. **Deduplication**:
+   *   Events are considered duplicates if they share `(symbol, event_type, event_date)`.
+   *   Provider-specific `provider_event_id` is stored for reference.
+3. **Event times**:
+   *   If provider events are missing time, default is `00:00:00`.
+   *   All timestamps stored in UTC.
+4. **Caching**:
+   *   `/api/v1/events` responses cached for 10 minutes.
+   *   Individual events cached per ID.
+5. **Sync logic**:
+   *   By default (`force: false`), symbols synced in the last hour are skipped.
+   *   `force: true` always fetches fresh events from providers.
+6. **Frontend dashboard**:
+   *   Displays live system metrics and latest events.
+   *   Uses **Jinja2 templates** and **static assets** for a premium UI.
+   *   Fetched directly from the service layer for performance.
+
+Architecture
+------------
+
+The service is built with a modular design to ensure high maintainability:
+
+*   **FastAPI**: Handles high-performance asynchronous REST API and routing.
+*   **SQLAlchemy**: Uses `AsyncSession` for efficient asynchronous database operations.
+*   **Redis**: Used for high-speed caching and tracking synchronization heartbeats.
+*   **Jinja2**: Renders the server-side dashboard with modern CSS and Inter typography.
+
+Data Models
+-----------
+
+### Event
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Unique identifier (Primary Key). |
+| `symbol` | String | Stock symbol (e.g., AAPL). |
+| `event_type` | String | Type of event (earnings, dividend, split, economic). |
+| `event_date` | DateTime | Scheduled date/time in UTC. |
+| `title` | String | Normalized human-readable title. |
+| `details` | JSON | Raw data payload from the provider. |
+| `source` | String | Data source (provider_a / provider_b). |
+| `provider_event_id` | String | Original ID from the external provider. |
+| `created_at` | DateTime | Record creation timestamp. |
+| `updated_at` | DateTime | Record last update timestamp. |
+
+**Unique Constraint**: `(symbol, event_type, event_date)`
+
+### EventSyncLog
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Primary key. |
+| `symbol` | String | The symbol being tracked. |
+| `last_synced_at` | DateTime | Last successful synchronization (UTC). |
+
+API Endpoints
+-------------
+
+### GET /api/v1/events
+
+Fetch events with optional filters.
+
+**Query Params**:
+- `symbols`: Comma-separated symbols (e.g., `AAPL,MSFT`)
+- `event_type`: Filter by type (e.g., `earnings`)
+- `from_date`: Start date (YYYY-MM-DD)
+- `to_date`: End date (YYYY-MM-DD)
+- `skip`: Pagination offset (Default: 0)
+- `limit`: Pagination limit (Default: 50)
+
+### GET /api/v1/events/metrics
+
+Returns system-wide metrics including total event counts and per-symbol statistics.
+
+### GET /api/v1/events/{event_id}
+
+Fetch a single event by its UUID.
+
+### POST /api/v1/events/sync
+
+Trigger synchronization with providers for specified symbols.
+
+**Request Body**:
+```json
+{
+  "symbols": ["AAPL", "MSFT"],
+  "force": false
+}
 ```
 
----
+### GET /api/v1/health
 
-## 📁 Directory Structure
+Returns service health status for the API, Database, and Redis.
 
-```text
-.
-├── app/
-│   ├── api/             # API Routers (events, health, dashboard)
-│   ├── core/            # Configuration (Pydantic Settings), DB, Redis
-│   ├── crud/            # Repository pattern logic
-│   ├── models/          # SQLAlchemy ORM models
-│   ├── schemas/         # Pydantic schemas (Request/Response)
-│   ├── services/        # Provider sync & business logic
-│   ├── static/          # CSS/JS for Dashboard
-│   ├── templates/       # Jinja2 HTML Templates
-│   └── main.py          # Application entry point
-├── providers/           # Simulated External Provider APIs
-├── tests/               # Modern Async Test Suite (pytest)
-├── pyproject.toml       # Poetry Dependencies
-└── README.md            # You are here
-```
+Dashboard
+---------
 
----
+*   Located at the root URL `/`.
+*   **Stats Grid**: Displays total processed events and count of tracked symbols.
+*   **Symbol Stats**: Detailed breakdown of events per symbol with last sync timestamps.
+*   **Recent Events**: A table of the latest 50 market events.
+*   **Modern Design**: Features a premium dark-themed UI with responsive layouts.
 
-## ⚡ Features
+Providers
+---------
 
-- **Multi-Provider Sync**: Concurrent synchronization with Provider A and Provider B.
-- **Robust Deduplication**: Intelligent event matching using composite unique constraints.
-- **Layered Cache Strategy**: Redis-backed caching with automatic TTL and `X-Cache` headers.
-- **Real-time Dashboard**: Interactive dashboard for visualizing market health and event logs.
-- **Proactive Health Monitoring**: Comprehensive status checks for DB and Redis connectivity.
-- **Async Implementation**: 100% asynchronous I/O using `asyncio`, `asyncpg`, and `redis-py`.
+*   **ProviderA** and **ProviderB** are simulated in the `providers/` directory.
+*   The application handles varying response structures and normalizes them into the unified internal model.
 
----
+Setup & Installation
+--------------------
 
-## 🚀 Getting Started
+### Requirements
+*   Python 3.12+
+*   Poetry
+*   Docker & Docker Compose
 
-### Prerequisites
+### Steps
 
-- **Python 3.12+**
-- **Poetry** (Package Manager)
-- **PostgreSQL** & **Redis** (Local or via Docker)
-
-### Installation
-
-1. **Install Dependencies**:
+1. **Clone the repository** and navigate to the project root.
+2. **Install dependencies**:
    ```bash
    poetry install
    ```
-
-2. **Environment Configuration**:
-   Create a `.env` file in the root directory:
-   ```env
-   DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/market_events
-   REDIS_URL=redis://localhost:6379/0
-   ```
-
-3. **Database Migration**:
-   Models are automatically created on startup via the SQLAlchemy `create_all` hook.
-
-4. **Run the Application**:
+3. **Environment Setup**: Create a `.env` file based on the codebase needs (Database and Redis URLs).
+4. **Infrastructure**: Start PostgreSQL and Redis via Docker.
    ```bash
-   poetry run uvicorn app.main:app --reload
+   docker-compose up -d
    ```
-   The dashboard will be available at `http://localhost:8000`.
+5. **Start the server**:
+   ```bash
+   poetry run uvicorn app.main:app --reload --port 8000
+   ```
+6. **Access**: Open `http://localhost:8000` in your browser.
 
----
+Testing
+-------
 
-## 🛠 API Documentation
-
-### Key Endpoints
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/` | Responsive Dashboard (Jinja2) |
-| `GET` | `/api/v1/events` | List events (Cached, Filters: symbols, date, type) |
-| `POST` | `/api/v1/events/sync` | Trigger Provider Synchronization |
-| `GET` | `/api/v1/events/metrics` | System-wide performance & count metrics |
-| `GET` | `/api/v1/health` | Deep health check (DB/Redis) |
-
-Detailed interactive docs are available at `/docs` (Swagger UI).
-
----
-
-## 🧪 Testing
-
-The project uses `pytest` with `pytest-asyncio` and `pytest-mock`. The test suite features database and redis isolation for every test run.
-
+Run the comprehensive async test suite using pytest:
 ```bash
-# Run all tests
 poetry run pytest
-
-# Run with coverage
-poetry run pytest --cov=app
 ```
 
----
+Linting
+-------
 
-## 💅 Linting & Formatting
-
-We use **Ruff** for high-performance linting and formatting.
-
+Maintain code quality with Ruff:
 ```bash
-# Lint check
 poetry run ruff check .
-
-# Format code
-poetry run ruff format .
 ```
-
----
-
-## 📝 License
-
-This project is prepared for assessment purposes. Refer to the internal evaluation guidelines for redistribution.

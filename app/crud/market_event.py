@@ -92,15 +92,14 @@ async def create_or_update_event(db: AsyncSession, event: schemas.EventCreate):
 
 
 async def get_metrics(db: AsyncSession):
-    # Total events
     total_events_result = await db.execute(select(func.count()).select_from(models.Event))
     total_events = total_events_result.scalar()
 
-    # Events per symbol
-    symbol_stats_result = await db.execute(select(models.Event.symbol, func.count(models.Event.id)).group_by(models.Event.symbol))
+    symbol_stats_result = await db.execute(
+        select(models.Event.symbol, func.count(models.Event.id)).group_by(models.Event.symbol)
+    )
     symbol_stats = symbol_stats_result.all()
 
-    # Sync logs
     sync_logs_result = await db.execute(select(models.EventSyncLog))
     sync_logs = sync_logs_result.scalars().all()
     sync_data = {log.symbol: log.last_synced_at for log in sync_logs}

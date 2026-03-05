@@ -98,7 +98,7 @@ async def test_get_metrics(db_session: AsyncSession, client: AsyncClient):
         title="TSLA Split",
         details={},
         source="provider_a",
-        provider_event_id="test_tsla_1"
+        provider_event_id="test_tsla_1",
     )
     db_session.add(event)
     await db_session.commit()
