@@ -1,12 +1,25 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
 from app.models import market_event as models
 from app.schemas import market_event as schemas
 from uuid import UUID
-from typing import List, Optional
+from typing import List, Optional, Any
 from datetime import date
+
+def _apply_event_filters(query: Any, symbols: Optional[List[str]] = None,
+                        event_type: Optional[str] = None,
+                        from_date: Optional[date] = None,
+                        to_date: Optional[date] = None):
+    if symbols:
+        query = query.filter(models.Event.symbol.in_(symbols))
+    if event_type:
+        query = query.filter(models.Event.event_type == event_type)
+    if from_date:
+        query = query.filter(models.Event.event_date >= from_date)
+    if to_date:
+        query = query.filter(models.Event.event_date <= to_date)
+    return query
 
 async def get_event(db: AsyncSession, event_id: UUID):
     result = await db.execute(select(models.Event).filter(models.Event.id == event_id))
@@ -22,15 +35,7 @@ async def get_events(
     to_date: Optional[date] = None,
 ):
     query = select(models.Event)
-    if symbols:
-        query = query.filter(models.Event.symbol.in_(symbols))
-    if event_type:
-        query = query.filter(models.Event.event_type == event_type)
-    if from_date:
-        query = query.filter(models.Event.event_date >= from_date)
-    if to_date:
-        query = query.filter(models.Event.event_date <= to_date)
-    
+    query = _apply_event_filters(query, symbols, event_type, from_date, to_date)
     result = await db.execute(query.offset(skip).limit(limit))
     return result.scalars().all()
 
@@ -42,15 +47,7 @@ async def get_events_count(
     to_date: Optional[date] = None,
 ):
     query = select(func.count()).select_from(models.Event)
-    if symbols:
-        query = query.filter(models.Event.symbol.in_(symbols))
-    if event_type:
-        query = query.filter(models.Event.event_type == event_type)
-    if from_date:
-        query = query.filter(models.Event.event_date >= from_date)
-    if to_date:
-        query = query.filter(models.Event.event_date <= to_date)
-        
+    query = _apply_event_filters(query, symbols, event_type, from_date, to_date)
     result = await db.execute(query)
     return result.scalar()
 
@@ -81,8 +78,3 @@ async def create_or_update_event(db: AsyncSession, event: schemas.EventCreate):
             await db.refresh(db_event)
             return db_event, False
         return None, False
-
-async def get_all_events(db: AsyncSession):
-    result = await db.execute(select(models.Event))
-    events = result.scalars().all()
-    return events

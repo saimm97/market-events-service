@@ -4,7 +4,7 @@ from sqlalchemy import select
 from datetime import datetime, timedelta, timezone
 
 from app.models.market_event import EventSyncLog
-from app import crud
+from app.crud import market_event as crud
 from app.schemas import market_event as schemas
 from app.core.config import settings
 from providers.provider_a import ProviderA

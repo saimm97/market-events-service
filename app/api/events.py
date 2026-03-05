@@ -7,17 +7,13 @@ from fastapi import APIRouter, Depends, Query, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 import redis.asyncio as redis
 
-from app import crud
+from app.crud import market_event as crud
 from app.core.db import get_db
 from app.core.cache import get_redis
 from app.schemas import market_event as schemas
 from app.services import provider_service as services
 
 router = APIRouter()
-
-@router.get("/events/all", response_model=List[schemas.Event])
-async def read_all_events(db: AsyncSession = Depends(get_db)):
-    return await crud.get_all_events(db)
 
 @router.get("/events", response_model=schemas.EventResponse)
 async def get_events(
