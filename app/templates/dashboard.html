@@ -1,157 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Market Events Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --success: #10b981;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            line-height: 1.5;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1 {
-            font-size: 1.875rem;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-label {
-            color: var(--text-muted);
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .content-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.02);
-            font-weight: 600;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        th {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 0.75rem 1.5rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            padding: 1rem 1.5rem;
-            font-size: 0.875rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.125rem 0.625rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--primary);
-        }
-
-        .badge-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .symbol-tag {
-            font-family: monospace;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .grid-layout {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 2rem;
-        }
-
-        @media (max-width: 1024px) {
-            .grid-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -169,6 +26,40 @@
                 <div class="stat-value">{{ metrics.symbols_count }}</div>
             </div>
         </div>
+
+        <!-- Filters -->
+        <form method="get" class="filter-bar">
+            <div class="form-group">
+                <label class="form-label">Symbol</label>
+                <input type="text" name="symbol" value="{{ filters.symbol }}" class="form-input"
+                    placeholder="e.g. AAPL">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Event Type</label>
+                <select name="event_type" class="form-input">
+                    <option value="">All Types</option>
+                    <option value="earnings" {% if filters.event_type=='earnings' %}selected{% endif %}>Earnings
+                    </option>
+                    <option value="dividend" {% if filters.event_type=='dividend' %}selected{% endif %}>Dividend
+                    </option>
+                    <option value="split" {% if filters.event_type=='split' %}selected{% endif %}>Split</option>
+                    <option value="economic" {% if filters.event_type=='economic' %}selected{% endif %}>Economic
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from_date" value="{{ filters.from_date }}" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to_date" value="{{ filters.to_date }}" class="form-input">
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn">Apply Filters</button>
+                <a href="/" class="btn btn-outline" style="text-decoration: none; text-align: center;">Reset</a>
+            </div>
+        </form>
 
         <div class="grid-layout">
             <!-- Symbols Metrics -->
@@ -225,4 +116,5 @@
         </div>
     </div>
 </body>
+
 </html>

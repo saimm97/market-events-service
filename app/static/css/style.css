@@ -1,4 +1,14 @@
-/* General Reset */
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --success: #10b981;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,153 +16,194 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f2f5;
-    color: #333;
-    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 2rem;
 }
 
-/* Header */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
 header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-header h1 {
-    font-size: 2.2rem;
-    color: #1f2937;
-}
-
-/* Metrics Section */
-#metrics h2 {
-    margin-bottom: 15px;
-    color: #111827;
-}
-
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
-}
-
-.metric-card {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-    text-align: center;
-    word-wrap: break-word;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.metric-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
-}
-
-.metric-card h3 {
-    font-size: 1.3rem;
-    margin-bottom: 8px;
-    color: #111827;
-}
-.metric-card p {
-    font-size: 0.95rem;
-    color: #4b5563;
-    margin-bottom: 5px;
-}
-
-/* Search Form */
-#search {
-    margin-top: 40px;
-    margin-bottom: 20px;
-}
-#search h2 {
-    margin-bottom: 15px;
-    color: #111827;
-}
-form {
+    margin-bottom: 2rem;
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    justify-content: space-between;
     align-items: center;
 }
-form input, form select, form button {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    font-size: 0.95rem;
-}
-form button {
-    background-color: #4f46e5;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-form button:hover {
-    background-color: #4338ca;
+
+h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
 }
 
-/* Events Table */
-#events h2 {
-    margin-bottom: 15px;
-    color: #111827;
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.content-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+    font-weight: 600;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-    background: #ffffff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-}
-
-thead {
-    background-color: #4f46e5;
-    color: #fff;
-}
-
-th, td {
-    padding: 12px 15px;
     text-align: left;
 }
 
-tbody tr:nth-child(even) {
-    background-color: #f9fafb;
+th {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 0.75rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
 }
 
-tbody tr:hover {
-    background-color: #eef2ff;
+td {
+    padding: 1rem 1.5rem;
+    font-size: 0.875rem;
+    border-bottom: 1px solid var(--border);
 }
 
-/* Responsive table */
-@media (max-width: 768px) {
-    table, thead, tbody, th, td, tr {
-        display: block;
-    }
-    thead {
-        display: none;
-    }
-    tbody tr {
-        margin-bottom: 15px;
-        background: #fff;
-        border-radius: 10px;
-        padding: 10px;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.05);
-    }
-    tbody td {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 12px;
-        border: none;
-        border-bottom: 1px solid #eee;
-    }
-    tbody td:last-child {
-        border-bottom: none;
-    }
-    tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #6b7280;
+tr:last-child td {
+    border-bottom: none;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary);
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.symbol-tag {
+    font-family: monospace;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.filter-bar {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.form-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.625rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    border-color: var(--primary);
+}
+
+.btn {
+    background: var(--primary);
+    color: white;
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn:hover {
+    background: var(--primary-dark);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.btn-outline:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+@media (max-width: 1024px) {
+    .grid-layout {
+        grid-template-columns: 1fr;
     }
 }
