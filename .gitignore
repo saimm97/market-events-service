@@ -1,0 +1,28 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Python
+*.pyo
+*.pyd
+*.env
+*.venv
+
+# Poetry
+.cache/
+*.lock
+
+# IDEs
+.idea/
+.vscode/
+
+# OS
+.DS_Store
