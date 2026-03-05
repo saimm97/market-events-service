@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.api import events, health
-from app.database import engine
+from app.core.db import engine
 from app.models import market_event
 from app.core.config import settings
 

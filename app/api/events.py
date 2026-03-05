@@ -5,14 +5,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import redis.asyncio as redis
 
 from app import crud
-from app.database import get_db
-from app.cache import get_redis
+from app.core.db import get_db
+from app.core.cache import get_redis
 from app.schemas import market_event as schemas
-from app.models.market_event import EventSyncLog
 from app.services import provider_service as services
 
 router = APIRouter()

@@ -2,7 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
-from app import models, schemas
+from app.models import market_event as models
+from app.schemas import market_event as schemas
 from uuid import UUID
 from typing import List, Optional
 from datetime import date

@@ -1,13 +1,7 @@
-
-import os
 import redis.asyncio as redis
-from dotenv import load_dotenv
+from app.core.config import settings
 
-load_dotenv()
-
-REDIS_URL = os.getenv("REDIS_URL")
-
-redis_client = redis.from_url(REDIS_URL, encoding="utf-8", decode_responses=True)
+redis_client = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
 
 async def get_redis():
     return redis_client
