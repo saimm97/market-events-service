@@ -162,7 +162,7 @@ Setup & Installation
 1. **Clone the repository** and navigate to the project root.
 2. **Install dependencies**:
    ```bash
-   poetry install
+   poetry install --no-root
    ```
 3. **Environment Setup**: Create a `.env` file based on the codebase needs (Database and Redis URLs).
 4. **Infrastructure**: Start PostgreSQL and Redis via Docker.
