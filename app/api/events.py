@@ -59,6 +59,11 @@ async def get_events(
     return result
 
 
+@router.get("/events/metrics")
+async def get_metrics(db: AsyncSession = Depends(get_db)):
+    return await crud.get_metrics(db)
+
+
 @router.get("/events/{event_id}", response_model=schemas.Event)
 async def get_event(
     event_id: UUID, response: Response, db: AsyncSession = Depends(get_db), r: redis.Redis = Depends(get_redis)

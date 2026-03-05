@@ -84,4 +84,28 @@ async def test_sync_events_endpoint(client: AsyncClient, mocker):
     data = response.json()
     assert data["status"] == "completed"
     assert data["events_created"] == 1
+    assert data["events_created"] == 1
     assert data["events_updated"] == 1
+
+
+@pytest.mark.asyncio
+async def test_get_metrics(db_session: AsyncSession, client: AsyncClient):
+    # Setup
+    event = Event(
+        symbol="TSLA",
+        event_type="split",
+        event_date=datetime(2026, 3, 5),
+        title="TSLA Split",
+        details={},
+        source="provider_a",
+        provider_event_id="test_tsla_1"
+    )
+    db_session.add(event)
+    await db_session.commit()
+
+    response = await client.get("/api/v1/events/metrics")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total_events"] == 1
+    assert "TSLA" in data["symbols"]
+    assert data["symbols"]["TSLA"]["count"] == 1
