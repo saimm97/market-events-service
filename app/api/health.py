@@ -1,33 +1,30 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 import redis.asyncio as redis
-import asyncpg
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 from app.schemas import market_event as schemas
-from app.core.config import settings
+from app.core.db import get_db
+from app.core.cache import get_redis
 
 router = APIRouter()
 
 @router.get("/health", response_model=schemas.HealthResponse)
-async def health():
+async def health(
+    db: AsyncSession = Depends(get_db),
+    r: redis.Redis = Depends(get_redis)
+):
     redis_status = "ok"
     db_status = "ok"
 
     # Check Redis
     try:
-        r = redis.from_url(settings.REDIS_URL, decode_responses=True)
         await r.ping()
-        await r.close()
     except Exception:
         redis_status = "error"
 
     # Check DB
     try:
-        # We need to parse common DB URL to use with asyncpg directly if needed,
-        # or just use the engine. For health check, a simple connection is fine.
-        # Replacing sync-style driver prefix if present for asyncpg
-        url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
-        conn = await asyncpg.connect(url)
-        await conn.fetch("SELECT 1")
-        await conn.close()
+        await db.execute(text("SELECT 1"))
     except Exception:
         db_status = "error"
 
