@@ -19,11 +19,13 @@ from typing import Any
 
 class ProviderBError(Exception):
     """Base exception for Provider B errors."""
+
     pass
 
 
 class RateLimitError(ProviderBError):
     """Raised when rate limit is exceeded."""
+
     def __init__(self, retry_after: int = 30):
         self.retry_after = retry_after
         super().__init__(f"Rate limit exceeded. Retry after {retry_after} seconds.")
@@ -31,6 +33,7 @@ class RateLimitError(ProviderBError):
 
 class ProviderTimeoutError(ProviderBError):
     """Raised when request times out."""
+
     pass
 
 
@@ -142,7 +145,7 @@ class ProviderB:
                     start_idx = i + 1
                     break
 
-        page_events = all_events[start_idx:start_idx + page_size]
+        page_events = all_events[start_idx : start_idx + page_size]
         has_next = start_idx + page_size < len(all_events)
 
         # Generate next cursor
@@ -184,12 +187,14 @@ class ProviderB:
                 event_date = base_date + timedelta(days=random.randint(1, days_ahead))
 
                 # Provider B uses different event type names and has economic events
-                event_type = random.choice([
-                    "earnings_release",
-                    "dividend_payment",
-                    "stock_split",
-                    "economic_indicator",
-                ])
+                event_type = random.choice(
+                    [
+                        "earnings_release",
+                        "dividend_payment",
+                        "stock_split",
+                        "economic_indicator",
+                    ]
+                )
 
                 event_id = f"pb_{symbol}_{event_type}_{event_date.strftime('%Y%m%d')}_{random.randint(1000, 9999)}"
 
@@ -227,10 +232,17 @@ class ProviderB:
                     }
                 elif event_type == "economic_indicator":
                     event["event"]["economic_data"] = {
-                        "indicator_name": random.choice([
-                            "CPI", "GDP", "Unemployment Rate", "Fed Interest Rate",
-                            "Retail Sales", "Housing Starts", "PMI"
-                        ]),
+                        "indicator_name": random.choice(
+                            [
+                                "CPI",
+                                "GDP",
+                                "Unemployment Rate",
+                                "Fed Interest Rate",
+                                "Retail Sales",
+                                "Housing Starts",
+                                "PMI",
+                            ]
+                        ),
                         "previous_value": round(random.uniform(-2, 5), 2),
                         "forecast_value": round(random.uniform(-2, 5), 2),
                     }

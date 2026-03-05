@@ -17,11 +17,13 @@ from typing import Any
 
 class ProviderAError(Exception):
     """Base exception for Provider A errors."""
+
     pass
 
 
 class RateLimitError(ProviderAError):
     """Raised when rate limit is exceeded."""
+
     def __init__(self, retry_after: int = 60):
         self.retry_after = retry_after
         super().__init__(f"Rate limit exceeded. Retry after {retry_after} seconds.")
@@ -29,6 +31,7 @@ class RateLimitError(ProviderAError):
 
 class ProviderUnavailableError(ProviderAError):
     """Raised when provider returns 5xx error."""
+
     pass
 
 

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Events Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Market Events Dashboard</h1>
+            <div class="badge badge-success">Live System</div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Events</div>
+                <div class="stat-value">{{ metrics.total_events }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tracked Symbols</div>
+                <div class="stat-value">{{ metrics.symbols_count }}</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <form method="get" class="filter-bar">
+            <div class="form-group">
+                <label class="form-label">Symbol</label>
+                <input type="text" name="symbol" value="{{ filters.symbol }}" class="form-input"
+                    placeholder="e.g. AAPL">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Event Type</label>
+                <select name="event_type" class="form-input">
+                    <option value="">All Types</option>
+                    <option value="earnings" {% if filters.event_type=='earnings' %}selected{% endif %}>Earnings
+                    </option>
+                    <option value="dividend" {% if filters.event_type=='dividend' %}selected{% endif %}>Dividend
+                    </option>
+                    <option value="split" {% if filters.event_type=='split' %}selected{% endif %}>Split</option>
+                    <option value="economic" {% if filters.event_type=='economic' %}selected{% endif %}>Economic
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">From Date</label>
+                <input type="date" name="from_date" value="{{ filters.from_date }}" class="form-input">
+            </div>
+            <div class="form-group">
+                <label class="form-label">To Date</label>
+                <input type="date" name="to_date" value="{{ filters.to_date }}" class="form-input">
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn">Apply Filters</button>
+                <a href="/" class="btn btn-outline" style="text-decoration: none; text-align: center;">Reset</a>
+            </div>
+        </form>
+
+        <div class="grid-layout">
+            <!-- Symbols Metrics -->
+            <div class="content-card">
+                <div class="card-header">Symbol Stats</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Events</th>
+                            <th>Last Synced</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for symbol, info in metrics.symbols.items() %}
+                        <tr>
+                            <td><span class="symbol-tag">{{ symbol }}</span></td>
+                            <td>{{ info.count }}</td>
+                            <td style="font-size: 0.75rem; color: var(--text-muted);">{{ info.last_synced_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Recent Events -->
+            <div class="content-card">
+                <div class="card-header">Recent Events</div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Type</th>
+                                <th>Event Date</th>
+                                <th>Title</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in events %}
+                            <tr>
+                                <td><span class="symbol-tag">{{ event.symbol }}</span></td>
+                                <td><span class="badge">{{ event.event_type }}</span></td>
+                                <td style="white-space: nowrap;">{{ event.event_date }}</td>
+                                <td>{{ event.title }}</td>
+                                <td><span class="badge">{{ event.source }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
